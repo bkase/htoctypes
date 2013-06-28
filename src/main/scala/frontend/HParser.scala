@@ -15,10 +15,14 @@ object HParser extends TokenParsers with PackratParsers {
 
   lazy val parser: PackratParser[AST.Root] = phrase (
     rep(
-      (structDefinition | typedefDefinition | enumDefinition) <~ Semicolon
+      (structDefinition | typedefDefinition | enumDefinition | functionDeclaration ) <~ Semicolon
     ) ^^ { case structs => AST.Root(structs) }
-  //rep(acceptIf(_ => true)(_ => "err")) ~>
-  //  success(AST.Root(Nil))
+  )
+
+  lazy val functionDeclaration: PackratParser[AST.Function] = (
+    typ ~ (ident <~ RParen) ~ (repsep(prop, Comma) <~ LParen) ^^ {
+      case r ~ i ~ args => AST.Function(r, AST.Cdecl, i, args)
+    }
   )
 
   lazy val enumDefinition: PackratParser[AST.Enum] = (
@@ -30,24 +34,24 @@ object HParser extends TokenParsers with PackratParsers {
   lazy val typedefDefinitionP: PackratParser[AST.Typedef] = (
       typ ~ ident ^^ { case t ~ i => AST.Typedef(t, i) }
     | structDefinition ~ ident ^^ { case s ~ i => AST.Typedef(s, i)}
-    | Struct ~> structBody ~ ident ^^ { case b ~ i => AST.Typedef(b, i) }
+    | Struct ~> structBody ~ ident ^^ { case b ~ i => AST.Typedef(AST.Struct(None, b), i) }
   )
 
   lazy val typedefDefinition: PackratParser[AST.Typedef] = (
     Typedef ~> typedefDefinitionP
   )
 
-  lazy val structBody: PackratParser[AST.StructBody] = (
+  lazy val structBody: PackratParser[List[AST.Property]] = (
     RCurly ~>
       (rep(prop <~ Semicolon))
     <~ LCurly ^^ {
-      case props => AST.StructBody(props)
+      case props => props
     }
   )
 
   lazy val structDefinition: PackratParser[AST.Struct] = (
     Struct ~> ident ~ structBody ^^ {
-      case i ~ b => AST.Struct(i, b)
+      case i ~ b => AST.Struct(Some(i), b)
     }
   )
 
@@ -104,6 +108,7 @@ object HParser extends TokenParsers with PackratParsers {
     | longTyp
     | unsignedTyp
     | Struct ~> ident ^^ { case i => AST.StructType(i) }
+    | Const ~> typ
     | ident
   )
 }
