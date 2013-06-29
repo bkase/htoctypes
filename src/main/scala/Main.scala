@@ -14,12 +14,6 @@ object Main extends App {
       |
       |int some_function(char x, int y);
       |
-      |enum x {
-      |  RED,
-      |  GREEN,
-      |  BLUE
-      |};
-      |
       |struct adb_main_input {
       |  int is_daemon;
       |  int server_port;
@@ -33,7 +27,7 @@ object Main extends App {
   val lexer = HLexical.lex(reader)
   HParser.parser(lexer.asInstanceOf[HParser.Input]) match {
     case HParser.Success(root, _) => {
-      println(ASTTransformer.elaborate)
+      println(CtypesWriter.write(ASTTransformer.transformRoot(root)))
       //println(CtypesWriter.write(Root(List(Typedef(Ident("x"), Ident("y")), Typedef(Ident("z"), Ident("o"))))))
     }
     case f @ HParser.NoSuccess(_, _) => println("Fail " + f)
