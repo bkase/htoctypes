@@ -22,7 +22,7 @@ object CtypesWriter {
       // case Enum(ident, choices) => ???
       case Function(s @ StringLit(ident), abi, returnTyp, args) =>
         declare(ident) + ctypesd + "declare(" +
-          (write(s) :: write(abi) :: write(returnTyp) :: args.map(write _)).foldLeft("")(_ + ", " + _) +
+          write(s) + ", " + write(abi) + ", " + write(returnTyp) + args.map(write _).foldLeft("")(_ + ", " + _) +
           ")"
 
       // abi
